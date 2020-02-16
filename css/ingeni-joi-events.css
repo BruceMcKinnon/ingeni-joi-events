@@ -1,0 +1,113 @@
+.joi_day {
+	display: block;
+	width: 100%;
+}
+
+
+
+.joi_day > .row {
+	display: block;
+}
+
+.joi_day > .row:nth-child(odd) {
+	background-color: #F5F5F5;
+}
+
+.joi_day .cell {
+	padding: 10px;
+	display: inline-block;
+	font-size: 14px;
+	line-height: 140%;
+	margin: 0;
+}
+@media only screen and (min-width: 640px) {
+	.joi_day > .row > .cell {
+		padding: 10px 15px;
+	}
+}
+
+
+.joi_day .small-12 {
+	width: calc(100% - 20px);
+}
+.joi_day .small-11 {
+	width: calc(91.6666% - 20px);
+}
+.joi_day .small-10 {
+	width: calc(83.3333% - 20px);
+}
+.joi_day .small-9 {
+	width: calc(75% - 20px);
+}
+.joi_day .small-8 {
+	width: calc(66.6666% - 20px);
+}
+.joi_day .small-7 {
+	width: calc(58.3333% - 20px);
+}
+.joi_day .small-6 {
+	width: calc(66.6666% - 20px);
+}
+.joi_day .small-5 {
+	width: calc(41.6666% - 20px);
+}
+.joi_day .small-4 {
+	width: calc(33.3333% - 20px);
+}
+.joi_day .small-3 {
+	width: calc(25% - 20px);
+}
+.joi_day .small-2 {
+	width: calc(16.6666% - 20px);
+}
+.joi_day .small-1 {
+	width: calc(8.3333% - 20px);
+}
+
+
+
+@media only screen and (min-width: 640px) {
+	.joi_day .medium-12, .joi_day .large-12 {
+		width: calc(100% - 30px);
+	}
+	.joi_day .medium-11, .joi_day .large-11 {
+		width: calc(91.6666% - 30px);
+	}
+	.joi_day .medium-10, .joi_day .large-10 {
+		width: calc(83.3333% - 30px);
+	}
+	.joi_day .medium-9, .joi_day .large-9 {
+		width: calc(75% - 30px);
+	}
+	.joi_day .medium-8, .joi_day .large-8 {
+		width: calc(66.6666% - 30px);
+	}
+	.joi_day .medium-7, .joi_day .large-7 {
+		width: calc(58.3333% - 30px);
+	}
+	.joi_day .medium-6, .joi_day .large-6 {
+		width: calc(66.6666% - 30px);
+	}
+	.joi_day .medium-5, .joi_day .large-5 {
+		width: calc(41.6666% - 30px);
+	}
+	.joi_day .medium-4, .joi_day .large-4 {
+		width: calc(33.3333% - 30px);
+	}
+	.joi_day .medium-3, .joi_day .large-3 {
+		width: calc(25% - 30px);
+	}
+	.joi_day .medium-2, .joi_day .large-2 {
+		width: calc(16.6666% - 30px);
+	}
+	.joi_day .medium-1, .joi_day .large-1 {
+		width: calc(8.3333% - 30px);
+	}
+}
+
+.joi_day .text-center {
+	text-align: center;
+}
+.joi_day .bold {
+	font-weight: bold;
+}
