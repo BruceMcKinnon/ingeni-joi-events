@@ -34,6 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 define("SAVE_JOI_SETTINGS", "Save Settings...");
 define("TEST_JOI_SETTINGS", "Test Connection...");
+define("CLEAR_JOI_CACHE", "Clear Cache...");
 define("JOI_PRIVATE_TOKEN", "ingeni_joi_private_token");
 define("JOI_API_URL", "ingeni_joi_api_url");
 
@@ -67,36 +68,31 @@ function ingeni_joi_get_all_events() {
 
 	if ( $cache_expiry < new DateTime("now") ) {
 		// Time to clear the cache
-$ingeniJoiEventsApi->fb_log("clearing cache");
+//$ingeniJoiEventsApi->fb_log("clearing cache");
 		ingeni_joi_clear_cache();
 
 		$json = $ingeniJoiEventsApi->get_joi_events(false,$errMsg);
-
+//$ingeniJoiEventsApi->fb_log(print_r($json,true));
 		if ( ( !empty($json) ) && ( strlen($errMsg) == 0 ) ) {
-
-$ingeniJoiEventsApi->fb_log(print_r($json,true));
 
 			// It worked! Now save the eventInfo, programInfo and sessionInfo into seperate structures in the DB
 			update_option(JOI_CACHED_EVENT_INFO, serialize($json['eventInfo']) );
+//$ingeniJoiEventsApi->fb_log(print_r($json['eventInfo'],true),'event-info');
 			update_option(JOI_CACHED_SESSION_INFO, serialize($json['sessionInfo']) );
+//$ingeniJoiEventsApi->fb_log(print_r($json['sessionInfo'],true),'session-info');
 			update_option(JOI_CACHED_PROGRAM_INFO, serialize($json['programInfo']) );	
-			update_option(JOI_CACHED_TIMELINE, serialize($json['timeline']) );			
+//$ingeniJoiEventsApi->fb_log(print_r($json['programInfo'],true),'program-info');
+			update_option(JOI_CACHED_TIMELINE, serialize($json['timeline']) );	
+//$ingeniJoiEventsApi->fb_log(print_r($json['timeline'],true),'timeline');		
 
 			$new_expiry = new DateTime("now");
 			$new_expiry->add(new DateInterval('PT1H'));
 			update_option(JOI_CACHE_TIMEOUT, $new_expiry );		
 		}
 
-
-
-		
-
-
 	}
 
 	$timeline = unserialize( get_option(JOI_CACHED_TIMELINE) );
-//$ingeniJoiEventsApi->fb_log(print_r($timeline[0],true));
-
 
 	$allEventsHtml = "";
 	$day_h3 = "";
@@ -106,27 +102,30 @@ $ingeniJoiEventsApi->fb_log(print_r($json,true));
 		$day_h3 = '';
 
 		foreach($day as $item) {
-	//$ingeniJoiEventsApi->fb_log(print_r($item,true));
-		//for ($idx = 0; $idx < count($timeline); ++$idx) {
-			//$joi_event_ids .= '<p>'.$item->title." ".$item->date." ".$item->start." ".$item->end.'</p>';
-
 			if (strlen($day_h3) == 0) {
 				$day_h3 = '<h3>'.date("D d M Y",strtotime($item['session_date'])).'</h3>';
 			}
-			//$dayHtml .= '<p>Day '.$item['on_day']." ".$item['title']." ".$item['date']." ".$item['start']." ".$item['end'].'</p>';
-		
+
+			$sessionHtml = '';
 			$dayHtml .= '<div class="row">';
-				$dayHtml .= '<div class="cell small-2">'.date("g:i a",strtotime($item['start'])).'</div>';
-				$dayHtml .= '<div class="cell small-2">'.date("g:i a",strtotime($item['end'])).'</div>';
+				
+				$sessionHtml = '<div class="cell small-2">'.date("g:i a",strtotime($item['start'])).'</div>';
+				$sessionHtml .= '<div class="cell small-2">'.date("g:i a",strtotime($item['end'])).'</div>';
 
 				$label = '';
 				if ( array_key_exists('labels',$item) ) {
 					if (count($item['labels']) > 0) {
-						$label = ingeni_joi_get_label($item['labels'][0]);
+						$theLabel = ingeni_joi_get_label($item['labels'][0]);
+						$label_title = $theLabel['label'];
+						$label_color = $theLabel['color'];
+						if (trim($label_title) != "") {
+							$label = '<div class="joi_label"><span style="background-color: '.$label_color . ';">'.$label_title.'</span></div>';
+						}
 					}
-					if (strlen($label) > 0) {
-						$label .= ": ";
-					}
+					//if (strlen($label) > 0) {
+						//$label .= ": ";
+					//}
+					//$ingeniJoiEventsApi->fb_log($label . ' | ' . print_r($item['labels'],true) );
 				}
 
 				$performer = '';
@@ -135,12 +134,27 @@ $ingeniJoiEventsApi->fb_log(print_r($json,true));
 						$performer = ingeni_joi_get_performer($item['performerIds'][0]);
 					}
 					if (strlen($performer) > 0) {
-						$performer .= " - ";
+						$performer = '<div class="performer">'.$performer.'</div>';
 					}
 				}
-				$dayHtml .= '<div class="cell small-8 bold">'.$label.$performer.$item['title'].'</div>';
+				$description = '';
+				if ( array_key_exists('description',$item) ) {
+					if (strlen( trim($item['description']) ) > 0) {
+						$item['description'] = str_replace(PHP_EOL,'<br/>',$item['description']);
+						$description = '<div class="description">'.$item['description'].'</div>';
+					}
+				}
 
-			$dayHtml .= '</div>';
+				$sessionHtml .= '<div class="cell small-8 bold">'.$item['title'].$label.'</div>';
+
+
+
+				if (strlen(trim($performer.$description)) > 0) {
+					$sessionHtml = '<button class="joi_accordion">'.$sessionHtml.'</button>';
+					$sessionHtml .= '<div class="joi_panel">'.$performer.$description.'</div>';
+				}
+				
+			$dayHtml .= $sessionHtml . '</div>'; // End of row
 
 		}
 		$dayHtml .= '</div>';
@@ -151,7 +165,7 @@ $ingeniJoiEventsApi->fb_log(print_r($json,true));
 	return $allEventsHtml;
 }
 
-
+// Get a Joi Event performer/presenter name
 function ingeni_joi_get_performer( $uid ) {
 	$json = unserialize( get_option( JOI_CACHED_EVENT_INFO ) );
 
@@ -164,30 +178,19 @@ function ingeni_joi_get_performer( $uid ) {
 	return trim($performer_name);
 }
 
-
+// Get a Joi event label
 function ingeni_joi_get_label( $uid ) {
 	$json = unserialize( get_option( JOI_CACHED_EVENT_INFO ) );
 
 	$label = '';
 
 	if ( array_key_exists( $uid, $json['session_labels'] ) ) {
-		$label = $json['session_labels'][$uid]['label'];
+		$label = $json['session_labels'][$uid];
 	}
 
-	return trim($label);
+	return $label;
 }
 
-
-function get_single_event( $event_id ) {
-	$retEvent = '';
-
-	$json = get_option( JOI_CACHED_EVENT.$event_id );
-	if ( !empty($json) ) {
-		$retEvent = unserialize( $json );
-	}
-
-	return $retEvent;
-}
 
 
 
@@ -198,13 +201,23 @@ add_shortcode( 'joi-events-list-all', 'ingeni_joi_events_list_all' );
 function ingeni_joi_events_list_all( $atts ) {
 	$params = shortcode_atts( array(
 		'class' => 'joi_events_wrapper',
+		'accordion' => 1,
 	), $atts );
 
 
 	$returnHtml = "";
 
+	$extra_css = "";
+
+	// Load the accordion JS if required.
+	if ( $params["accordion"] == 1 ) {
+		wp_enqueue_script( 'ingeni-joi-accordion' );
+		$extra_css .= " ingeni_joi_accordion";
+	}
+
+
 	if ( strlen($params["class"]) > 0 ) {
-		$returnHtml .= '<div class="'.$params["class"].'">';
+		$returnHtml .= '<div class="'.$params["class"].$extra_css.'">';
 	}
 
 	$returnHtml .= ingeni_joi_get_all_events();
@@ -245,9 +258,18 @@ function ingeni_load_joi() {
 add_action( 'wp_enqueue_scripts', 'ingeni_load_joi' );
 
 
+//
+// Custom JS
+//
+function ingeni_joi_register_js() {
+	wp_register_script( 'ingeni-joi-accordion', plugins_url('js/ingeni_joi_accordion.js', __FILE__) );
+}
+add_action( 'wp_enqueue_scripts', 'ingeni_joi_register_js' );
+
+
 
 //
-// Cusom CSS
+// Custom CSS
 //
 function ingeni_joi_enqueue_scripts() {
 	wp_enqueue_style( 'ingeni-joi-css', plugins_url('css/ingeni-joi-events.css', __FILE__) );
@@ -258,7 +280,9 @@ function ingeni_joi_enqueue_admin_scripts() {
 	wp_enqueue_style( 'ingeni-joi-admin-css', plugins_url('css/ingeni-joi-events-admin.css', __FILE__) );
 }
 add_action( 'admin_enqueue_scripts', 'ingeni_joi_enqueue_admin_scripts' );
-    
+
+
+
 
 
 
@@ -289,13 +313,19 @@ function ingeni_joi_options_page() {
 			case TEST_JOI_SETTINGS :
 
 				$errMsg = "";
-				$return_json = $ingeniJoiEventsApi->get_joi_events( true, $errMsg );
+				$return_json = $ingeniJoiEventsApi->get_joi_events( $_POST[JOI_API_URL], $errMsg );
 				if ( ( !empty($return_json) ) && ( strlen($errMsg) == 0 ) ) {
 					echo('<div class="updated"><p><strong>OK</p></div>');
 				} else {
 					echo('<div class="updated"><p><strong>Error: '.$errMsg.'</strong></p></div>');					
 				}
 
+			break;
+
+			case CLEAR_JOI_CACHE :
+				$errMsg = "";
+				ingeni_joi_clear_cache();
+				echo('<div class="updated"><p><strong>Cache cleared...</p></div>');
 			break;
 				
 			case SAVE_JOI_SETTINGS :
@@ -318,7 +348,7 @@ function ingeni_joi_options_page() {
 		echo('<h2>Joi Events</h2>');
 
 		echo('<form action="'. str_replace( '%7E', '~', $_SERVER['REQUEST_URI']).'" method="post" name="ingeni_joi_options_page">'); 
-			echo('<input type="hidden" name="ingeni_joiedit_hidden" value="Y">');
+			echo('<input type="hidden" name="ingeni_joi_edit_hidden" value="Y">');
 			
 			echo('<table class="form-table">');
 
@@ -337,9 +367,10 @@ function ingeni_joi_options_page() {
 			
 			echo('</tbody></table><br/>');			
 			
-			echo('<p class="submit"><input type="submit" name="btn_ingeni_joi_submit" id="btn_ingeni_joi_submit" class="button button-primary" value="'.SAVE_JOI_SETTINGS.'">   ');
-			echo('<input type="submit" name="btn_ingeni_joi_submit" id="btn_ingeni_joi_submit" class="button button-primary" value="'.TEST_JOI_SETTINGS.'"></p>');
-		echo('</form>');	
+			echo('<p class="submit"><input type="submit" name="btn_ingeni_joi_submit" id="btn_ingeni_joi_submit" class="button button-primary" value="'.SAVE_JOI_SETTINGS.'">');
+			echo('<input type="submit" name="btn_ingeni_joi_submit" id="btn_ingeni_joi_submit" class="button button-primary" value="'.TEST_JOI_SETTINGS.'">');
+			echo('<input type="submit" name="btn_ingeni_joi_submit" id="btn_ingeni_joi_submit" class="button button-primary" value="'.CLEAR_JOI_CACHE.'"></p>');
+			echo('</form>');	
 	echo('</div>');
 }
 

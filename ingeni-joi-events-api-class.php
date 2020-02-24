@@ -19,15 +19,20 @@ class IngeniJoiEventsApi {
 	}
 
 
-	public function fb_log($msg) {
+	public function fb_log($msg, $filename = "") {
 		$upload_dir = wp_upload_dir();
 		$outFile = $upload_dir['basedir'];
+	
 		if ( $this->is_local() ) {
 			$outFile .= DIRECTORY_SEPARATOR;
 		} else {
 			$outFile .= DIRECTORY_SEPARATOR;
 		}
-		$outFile .= basename(__DIR__).'.txt';
+
+		if ($filename == "") {
+			$filename = basename(__DIR__);
+		}
+		$outFile .= $filename.'.txt';
 		
 		date_default_timezone_set("Australia/Sydney");
 
@@ -72,11 +77,14 @@ class IngeniJoiEventsApi {
 
 
 
-	public function get_joi_events( $test = false, &$errMsg ) {
+	public function get_joi_events( $url = "", &$errMsg ) {
 		$json = "";
+		if ($url == "") {
+			$url = $this->joi_api_url;
+		}
 
 		try {
-			$json = $this->ingeni_joi_connect( $this->joi_api_url, $errMsg );
+			$json = $this->ingeni_joi_connect( $url, $errMsg );
 
 		} catch (Exception $ex) {
 			$errMsg = $ex->Message;

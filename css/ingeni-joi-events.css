@@ -7,22 +7,26 @@
 
 .joi_day > .row {
 	display: block;
+	border-top: #F5F5F5 2px solid;
 }
 
-.joi_day > .row:nth-child(odd) {
-	background-color: #F5F5F5;
+.joi_day > .row > button {
+	display: block;
+	/*border-bottom: #ffffff 2px solid;*/
+	margin-bottom: 2px;
 }
 
 .joi_day .cell {
-	padding: 10px;
+	padding: 5px;
 	display: inline-block;
 	font-size: 14px;
 	line-height: 140%;
 	margin: 0;
+	vertical-align: top;
 }
 @media only screen and (min-width: 640px) {
 	.joi_day > .row > .cell {
-		padding: 10px 15px;
+		padding: 5px 15px;
 	}
 }
 
@@ -110,4 +114,73 @@
 }
 .joi_day .bold {
 	font-weight: bold;
+}
+
+
+
+/* Style the buttons that are used to open and close the accordion panel */
+.joi_accordion {
+  background-color: #F5F5F5;
+  cursor: pointer;
+  padding: 5px 10px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  outline: none;
+  transition: 0.4s;
+}
+
+button.joi_accordion:after {
+	float: right;
+	margin: 5px;
+	border-style: solid;
+	border-width: 2px 2px 0 0;
+	border-color: #000000;
+	content: '';
+	height: 10px;
+	position: relative;
+	top: 5px;
+
+	-webkit-transform: rotate(135deg);
+	-ms-transform: rotate(135deg);
+	transform: rotate(135deg);
+	width: 10px;
+}
+
+/* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
+.active, .joi_accordion:hover {
+  background-color: #F5F5F5;
+}
+
+button.joi_accordion.active:after {
+	-webkit-transform: rotate(-45deg);
+	-ms-transform: rotate(-45deg);
+	transform: rotate(-45deg);
+}
+
+/* Style the accordion panel. Note: hidden by default */
+.joi_panel {
+  padding: 15px;
+  background-color: #ffffff;
+  display: none;
+  overflow: hidden;
+}
+
+.joi_label {
+	margin: 10px 0;
+}
+.joi_label span {
+	padding: 3px 5px;
+	border-radius: 2px;
+	color: #ffffff;
+}
+
+.joi_panel .performer, .joi_panel .description {
+	font-size: 14px;
+	line-height: 140%;
+	margin: 5px 0;
+}
+
+.joi_panel .description br {
+	margin-bottom: 3px;
 }
