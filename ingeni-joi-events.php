@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Joi Events
-Version: 2020.02
+Version: 2020.03
 Plugin URI: http://ingeni.net
 Author: Bruce McKinnon - ingeni.net
 Author URI: http://ingeni.net
@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 // v2020.01 - Initial release
 // v2020.02 - Minor date formatting change
+// v2020.03 - Added track nesting, and the hidelabelcolors option for the shortcode
 //
 
 
@@ -57,10 +58,12 @@ $ingeniJoiEventsApi;
 //
 // Main function for calling Joi, saving event data and managing cached data
 //
-function ingeni_joi_get_all_events() {
+function ingeni_joi_get_all_events( $hide_label_colors ) {
 	global $ingeniJoiEventsApi;
 
 	$debugMode = get_option(JOI_API_DEBUG, 0);
+
+	$hide_colors = explode(',',$hide_label_colors);
 
 	// If the cache is empty, go an get a live refresh
 	if ( !$ingeniJoiEventsApi ) {
@@ -100,7 +103,7 @@ function ingeni_joi_get_all_events() {
 
 			// Set the new cache expiry date
 			$new_expiry = new DateTime("now");
-			$expiry_mins = get_option(JOI_CACHE_TIMEOUT_MINS, 60);
+			$expiry_mins = get_option(JOI_CACHE_MINS, 60);
 			if ($expiry_mins < 1) {
 				$expiry_mins = 1;  // 1 minute
 			}
@@ -124,16 +127,25 @@ function ingeni_joi_get_all_events() {
 		$dayHtml = '<div class="joi_day">';
 		$day_h3 = '';
 
+		// Current track id
+		$current_track = '';
+		$track_label_color = '#000000';
+		$track_wrapper_start = '';
+		$track_wrapper_end = '';
+
 		foreach($day as $item) {
 			if (strlen($day_h3) == 0) {
 				$day_h3 = '<h3>'.date("D j M Y",strtotime($item['session_date'])).'</h3>';
 			}
 
+				$item_track = '';
+				$extra_row_css = '';
+				
 				//
 				// Build row contents
 				//
-				$sessionHtml = '<div class="cell small-2">'.date("g:i a",strtotime($item['start'])).'</div>';
-				$sessionHtml .= '<div class="cell small-2">'.date("g:i a",strtotime($item['end'])).'</div>';
+				$sessionHtml = '<div class="cell small-3 medium-2">'.date("g:i a",strtotime($item['start'])).'</div>';
+				$sessionHtml .= '<div class="cell small-3 medium-2">'.date("g:i a",strtotime($item['end'])).'</div>';
 
 				$label = '';
 				if ( array_key_exists('labels',$item) ) {
@@ -141,9 +153,49 @@ function ingeni_joi_get_all_events() {
 						$theLabel = ingeni_joi_get_label($item['labels'][0]);
 						$label_title = $theLabel['label'];
 						$label_color = $theLabel['color'];
+
+						// Should this row be hidden?
+						if (in_array($label_color,$hide_colors) ) {
+							$label_title = '';
+						}
+
 						if (trim($label_title) != "") {
 							$label = '<div class="joi_label"><span style="background-color: '.$label_color . ';">'.$label_title.'</span></div>';
 						}
+					}
+					// Is this session in a track?
+					if (count($item['labels']) > 1) {
+						$theLabel= ingeni_joi_get_label($item['labels'][1]);
+						if ( $theLabel['color'] == $track_label_color) {
+							$item_track = $theLabel['label'];
+
+							if ($current_track != $item_track) {
+								if ($current_track == '') {
+									$track_wrapper_start = '<div class="row track_wrapper"><div class="cell small-12 full"><h4>'.$item_track.'</h4>';
+								} else {
+
+									$track_wrapper_start = '</div><!-- 1 --></div>';
+								}
+							} else {
+								$track_wrapper_start = '';
+							}
+							if ( (strlen($current_track) > 0) && ($item_track == '') ) {
+								$track_wrapper_end = '</div><!-- 2 --></div>';
+							}
+							$current_track = $item_track;
+
+						} else {
+							$item_track = '';
+
+						}
+					} else {
+						$track_wrapper_start = '';
+						$track_wrapper_end = '';
+
+						if ( (strlen($current_track) > 0) && ($item_track == '') ) {
+							$track_wrapper_start = '</div><!-- 3 '.$current_track.'--></div>';
+						}
+						$current_track = '';
 					}
 				}
 
@@ -172,12 +224,12 @@ function ingeni_joi_get_all_events() {
 				}
 
 
-				$sessionHtml .= '<div class="cell small-8 bold">'.$item['title'].$label.'</div>';
+				$sessionHtml .= '<div class="cell small-6 medium-8 bold">'.$item['title'].$label.'</div>';
 
-				$extra_row_css = '';
+				
 
 				if (strlen(trim($performer.$description)) > 0) {
-					$extra_row_css = 'accordion_wrap';
+					$extra_row_css .= 'accordion_wrap';
 					$sessionHtml = '<button class="joi_accordion">'.$sessionHtml.'</button>';
 					$sessionHtml .= '<div class="joi_panel">'.$performer.$description.$location.'</div>';
 				}
@@ -186,7 +238,7 @@ function ingeni_joi_get_all_events() {
 				//
 
 			// Add row wrapping around row contents
-			$dayHtml .= '<div class="row '.$extra_row_css.'">'. $sessionHtml . '</div>';
+			$dayHtml .= $track_wrapper_start.'<div class="row '.$extra_row_css.'">'. $sessionHtml . '</div>'.$track_wrapper_end;
 
 		}
 		$dayHtml .= '</div>';
@@ -211,7 +263,7 @@ function ingeni_joi_get_performer( $uid ) {
 }
 
 // Get a Joi event label
-function ingeni_joi_get_label( $uid ) {
+function ingeni_joi_get_label( $uid, $required_color = '' ) {
 	$json = unserialize( get_option( JOI_CACHED_EVENT_INFO ) );
 
 	$label = '';
@@ -253,6 +305,7 @@ function ingeni_joi_events_list_all( $atts ) {
 	$params = shortcode_atts( array(
 		'class' => 'joi_events_wrapper',
 		'accordion' => 1,
+		'hidelabelcolors' => '',
 	), $atts );
 
 
@@ -271,7 +324,7 @@ function ingeni_joi_events_list_all( $atts ) {
 		$returnHtml .= '<div class="'.$params["class"].$extra_css.'">';
 	}
 
-	$returnHtml .= ingeni_joi_get_all_events();
+	$returnHtml .= ingeni_joi_get_all_events( $params["hidelabelcolors"] );
 
 	if ( strlen($params["class"]) > 0 ) {
 		$returnHtml .= '</div>';

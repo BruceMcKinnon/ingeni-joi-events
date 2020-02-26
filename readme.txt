@@ -4,7 +4,7 @@ Contributors: Bruce McKinnon
 Tags: eventbrite
 Requires at least: 5
 Tested up to: 5.3
-Stable tag: 2020.02
+Stable tag: 2020.03
 
 Display a list of event sessions for a specific organiser
 
@@ -51,6 +51,13 @@ If you wish to apply your own custom CSS to the list, add the 'class' parameter 
 [joi-events-list-all class="my_custom_list"]
 
 Add the appropriate CSS to the the CCS file of your Wordpress file.
+
+
+To hide labels of a perticular colour, use the hidelabelcolors parameter with HTML hex colours separated by a comma.
+
+[joi-events-list-all hidelabelcolors="#xxxxxx,#yyyyyy,#zzzzzz"]
+
+
 
 
 
