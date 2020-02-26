@@ -1,14 +1,23 @@
 .joi_day {
 	display: block;
 	width: 100%;
+	margin-bottom: 30px;
 }
-
+@media only screen and (min-width: 640px) {
+	.joi_day {
+		margin-bottom: 50px;
+	}
+}
 
 
 .joi_day > .row {
 	display: block;
-	border-top: #F5F5F5 2px solid;
+	border-bottom: #F5F5F5 2px solid;
 }
+.joi_day > .row.accordion_wrap {
+	border-bottom-width: 0;
+}
+
 
 .joi_day > .row > button {
 	display: block;
@@ -17,7 +26,7 @@
 }
 
 .joi_day .cell {
-	padding: 5px;
+	padding: 10px 5px;
 	display: inline-block;
 	font-size: 14px;
 	line-height: 140%;
@@ -26,7 +35,7 @@
 }
 @media only screen and (min-width: 640px) {
 	.joi_day > .row > .cell {
-		padding: 5px 15px;
+		padding: 10px 15px;
 	}
 }
 
@@ -140,7 +149,6 @@ button.joi_accordion:after {
 	height: 10px;
 	position: relative;
 	top: 5px;
-
 	-webkit-transform: rotate(135deg);
 	-ms-transform: rotate(135deg);
 	transform: rotate(135deg);
@@ -163,7 +171,8 @@ button.joi_accordion.active:after {
   padding: 15px;
   background-color: #ffffff;
   display: none;
-  overflow: hidden;
+	overflow: hidden;
+	border-bottom: #F5F5F5 2px solid;
 }
 
 .joi_label {
@@ -175,12 +184,12 @@ button.joi_accordion.active:after {
 	color: #ffffff;
 }
 
-.joi_panel .performer, .joi_panel .description {
+.joi_panel .performer, .joi_panel .description, .joi_panel .location {
 	font-size: 14px;
-	line-height: 140%;
-	margin: 5px 0;
+	line-height: 130%;
+	margin: 10px 0;
 }
 
-.joi_panel .description br {
+.joi_panel .description p {
 	margin-bottom: 3px;
 }

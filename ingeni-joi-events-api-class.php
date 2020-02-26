@@ -1,5 +1,8 @@
 <?php
 
+//
+// IngeniJoiEventsApi - Class to connect and retrive JSON event feed from the Joi server.
+//
 
 class IngeniJoiEventsApi {
 	private $joi_api_private_token;
@@ -19,7 +22,7 @@ class IngeniJoiEventsApi {
 	}
 
 
-	public function fb_log($msg, $filename = "") {
+	public function fb_log($msg, $filename = "", $overwrite = false) {
 		$upload_dir = wp_upload_dir();
 		$outFile = $upload_dir['basedir'];
 	
@@ -36,15 +39,20 @@ class IngeniJoiEventsApi {
 		
 		date_default_timezone_set("Australia/Sydney");
 
+		$write_mode = "a";
+		if ($overwrite) {
+			$write_mode = "w+";
+		}
+
 		// Now write out to the file
-		$log_handle = fopen($outFile, "a");
+		$log_handle = fopen($outFile, $write_mode);
 		if ($log_handle !== false) {
 			fwrite($log_handle, date("Y-m-d H:i:s").": ".$msg."\r\n");
 			fclose($log_handle);
 		}
 	}	
 
-
+	// Connect to the Joi server
 	private function ingeni_joi_connect( $url, &$errMsg ) {
 		try {
 			$return_json = "";
@@ -75,8 +83,7 @@ class IngeniJoiEventsApi {
 		return $return_json;
 	}
 
-
-
+	// Return the Joi JSON structure
 	public function get_joi_events( $url = "", &$errMsg ) {
 		$json = "";
 		if ($url == "") {

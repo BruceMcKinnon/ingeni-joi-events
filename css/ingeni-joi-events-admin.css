@@ -1,3 +1,7 @@
+.notice-success, div.updated {
+	border-left-color: #54ddc7;
+}
+
 .ingeni_joi_events_admin_wrap img {
 	display: inline-block;
 	margin: 30px 30px 0 15px;
@@ -7,6 +11,13 @@
 	line-height: 60px;
 	margin: 0;
 	vertical-align: text-bottom;
+}
+
+.hide {
+	display: none;
+}
+.show {
+	display: block;
 }
 
 .ingeni_joi_events_admin_wrap table.form-table {
@@ -21,6 +32,9 @@
 .ingeni_joi_events_admin_wrap table.form-table tr td input {
 	width: 100%;
 }
+.ingeni_joi_events_admin_wrap table.form-table tr td input[type=checkbox] {
+	max-width: 15px;
+}
 
 .ingeni_joi_events_admin_wrap .wp-core-ui .button-primary,
 .ingeni_joi_events_admin_wrap #btn_ingeni_joi_submit {
@@ -28,7 +42,7 @@
 	color: #FFFFFF;
 	font-size: 16px;
 	font-weight: bold;
-	padding: 15px 30px;
+	padding: 10px 20px;
 	border: solid 1px #FF8A5C;
 	line-height: 100%;
 	border-radius: 24px;

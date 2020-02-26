@@ -4,7 +4,7 @@ Contributors: Bruce McKinnon
 Tags: eventbrite
 Requires at least: 5
 Tested up to: 5.3
-Stable tag: 2020.01
+Stable tag: 2020.02
 
 Display a list of event sessions for a specific organiser
 
@@ -38,7 +38,7 @@ Display a list of event sessions for a specific organiser
 
 Use the Wordpress shortcode
 
-[ingeni-joi-events]
+[joi-events-list-all]
 
 The shortcode may be used from any page or post.
 
@@ -48,7 +48,7 @@ The shortcode may be used from any page or post.
 If you wish to apply your own custom CSS to the list, add the 'class' parameter to the shortcode. E.g.,
 
 
-[ingeni-joi-events class="my_custom_list"]
+[joi-events-list-all class="my_custom_list"]
 
 Add the appropriate CSS to the the CCS file of your Wordpress file.
 
@@ -57,3 +57,5 @@ Add the appropriate CSS to the the CCS file of your Wordpress file.
 == Changelog ==
 
 v2020.01 - Initial version
+v2020.02 - Minor date formatting change
+

@@ -1,14 +1,14 @@
 <?php
 /*
-Plugin Name: Ingeni Joi Events
-Version: 2020.01
+Plugin Name: Joi Events
+Version: 2020.02
 Plugin URI: http://ingeni.net
 Author: Bruce McKinnon - ingeni.net
 Author URI: http://ingeni.net
 Description: Get Joi event info
 License: GPL v3
 
-Ingeni Eventbrite
+Ingeni Joi Events
 Copyright (C) 2020, Bruce McKinnon
 
 This program is free software: you can redistribute it and/or modify
@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 //
 // v2020.01 - Initial release
+// v2020.02 - Minor date formatting change
 //
 
 
@@ -37,12 +38,15 @@ define("TEST_JOI_SETTINGS", "Test Connection...");
 define("CLEAR_JOI_CACHE", "Clear Cache...");
 define("JOI_PRIVATE_TOKEN", "ingeni_joi_private_token");
 define("JOI_API_URL", "ingeni_joi_api_url");
+define("JOI_API_DEBUG", "ingeni_joi_api_debug");
 
-define("JOI_CACHE_TIMEOUT", "ingeni_joi_cache_timeout");
+define("JOI_CACHE_TIMEOUT_DATE", "ingeni_joi_cache_timeout_date");
+define("JOI_CACHE_MINS", "ingeni_joi_cache_timeout_mins");
 define("JOI_CACHED_EVENT_INFO", "ingeni_joi_event_info");
 define("JOI_CACHED_PROGRAM_INFO", "ingeni_joi_program_info");
 define("JOI_CACHED_SESSION_INFO", "ingeni_joi_session_info");
 define("JOI_CACHED_TIMELINE", "ingeni_joi_timeline");
+
 
 define("JOI_DEFAULT_URL","https://joi.land/json/publishedEvent/faf0694e");
 
@@ -56,6 +60,8 @@ $ingeniJoiEventsApi;
 function ingeni_joi_get_all_events() {
 	global $ingeniJoiEventsApi;
 
+	$debugMode = get_option(JOI_API_DEBUG, 0);
+
 	// If the cache is empty, go an get a live refresh
 	if ( !$ingeniJoiEventsApi ) {
 		$token = get_option(JOI_PRIVATE_TOKEN);
@@ -64,30 +70,46 @@ function ingeni_joi_get_all_events() {
 	}
 
 	$cache_expiry = new DateTime("2020-01-01");
-	$cache_expiry = get_option(JOI_CACHE_TIMEOUT, $cache_expiry);
+	$cache_expiry = get_option(JOI_CACHE_TIMEOUT_DATE, $cache_expiry);
 
 	if ( $cache_expiry < new DateTime("now") ) {
 		// Time to clear the cache
-//$ingeniJoiEventsApi->fb_log("clearing cache");
 		ingeni_joi_clear_cache();
+		if ($debugMode == 1) {
+			$ingeniJoiEventsApi->fb_log("clearing cache");
+		}
 
+		// Now grab the JSON feed of events
 		$json = $ingeniJoiEventsApi->get_joi_events(false,$errMsg);
-//$ingeniJoiEventsApi->fb_log(print_r($json,true));
+
 		if ( ( !empty($json) ) && ( strlen($errMsg) == 0 ) ) {
 
 			// It worked! Now save the eventInfo, programInfo and sessionInfo into seperate structures in the DB
 			update_option(JOI_CACHED_EVENT_INFO, serialize($json['eventInfo']) );
-//$ingeniJoiEventsApi->fb_log(print_r($json['eventInfo'],true),'event-info');
 			update_option(JOI_CACHED_SESSION_INFO, serialize($json['sessionInfo']) );
-//$ingeniJoiEventsApi->fb_log(print_r($json['sessionInfo'],true),'session-info');
 			update_option(JOI_CACHED_PROGRAM_INFO, serialize($json['programInfo']) );	
-//$ingeniJoiEventsApi->fb_log(print_r($json['programInfo'],true),'program-info');
 			update_option(JOI_CACHED_TIMELINE, serialize($json['timeline']) );	
-//$ingeniJoiEventsApi->fb_log(print_r($json['timeline'],true),'timeline');		
 
+			if ($debugMode == 1) {
+				$ingeniJoiEventsApi->fb_log(print_r($json['timeline'],true),'timeline', true);
+				$ingeniJoiEventsApi->fb_log(print_r($json['sessionInfo'],true),'session-info', true);
+				$ingeniJoiEventsApi->fb_log(print_r($json['programInfo'],true),'program-info', true);
+				$ingeniJoiEventsApi->fb_log(print_r($json['eventInfo'],true),'event-info', true);
+			}
+
+
+			// Set the new cache expiry date
 			$new_expiry = new DateTime("now");
-			$new_expiry->add(new DateInterval('PT1H'));
-			update_option(JOI_CACHE_TIMEOUT, $new_expiry );		
+			$expiry_mins = get_option(JOI_CACHE_TIMEOUT_MINS, 60);
+			if ($expiry_mins < 1) {
+				$expiry_mins = 1;  // 1 minute
+			}
+			if ($expiry_mins > 1440) {
+				$expiry_mins = 1440; // 1 day
+			}
+			$expiry_formatted = sprintf("PT%dM",$expiry_mins);
+			$new_expiry->add(new DateInterval($expiry_formatted));
+			update_option(JOI_CACHE_TIMEOUT_DATE, $new_expiry );		
 		}
 
 	}
@@ -97,18 +119,19 @@ function ingeni_joi_get_all_events() {
 	$allEventsHtml = "";
 	$day_h3 = "";
 
+	// Construct the front-end HTML
 	foreach($timeline as $day) {
 		$dayHtml = '<div class="joi_day">';
 		$day_h3 = '';
 
 		foreach($day as $item) {
 			if (strlen($day_h3) == 0) {
-				$day_h3 = '<h3>'.date("D d M Y",strtotime($item['session_date'])).'</h3>';
+				$day_h3 = '<h3>'.date("D j M Y",strtotime($item['session_date'])).'</h3>';
 			}
 
-			$sessionHtml = '';
-			$dayHtml .= '<div class="row">';
-				
+				//
+				// Build row contents
+				//
 				$sessionHtml = '<div class="cell small-2">'.date("g:i a",strtotime($item['start'])).'</div>';
 				$sessionHtml .= '<div class="cell small-2">'.date("g:i a",strtotime($item['end'])).'</div>';
 
@@ -122,10 +145,6 @@ function ingeni_joi_get_all_events() {
 							$label = '<div class="joi_label"><span style="background-color: '.$label_color . ';">'.$label_title.'</span></div>';
 						}
 					}
-					//if (strlen($label) > 0) {
-						//$label .= ": ";
-					//}
-					//$ingeniJoiEventsApi->fb_log($label . ' | ' . print_r($item['labels'],true) );
 				}
 
 				$performer = '';
@@ -140,21 +159,34 @@ function ingeni_joi_get_all_events() {
 				$description = '';
 				if ( array_key_exists('description',$item) ) {
 					if (strlen( trim($item['description']) ) > 0) {
-						$item['description'] = str_replace(PHP_EOL,'<br/>',$item['description']);
-						$description = '<div class="description">'.$item['description'].'</div>';
+						$item['description'] = str_replace(PHP_EOL,'<p/>',$item['description']);
+						$description = '<div class="description"><p>'.$item['description'].'</p></div>';
+					}
+				}
+				$location = '';
+				if ( array_key_exists('program',$item) ) {
+					$location = ingeni_joi_get_location($item['program']);
+					if (strlen($location) > 0) {
+						$location = '<div class="location">'.$location.'</div>';
 					}
 				}
 
+
 				$sessionHtml .= '<div class="cell small-8 bold">'.$item['title'].$label.'</div>';
 
-
+				$extra_row_css = '';
 
 				if (strlen(trim($performer.$description)) > 0) {
+					$extra_row_css = 'accordion_wrap';
 					$sessionHtml = '<button class="joi_accordion">'.$sessionHtml.'</button>';
-					$sessionHtml .= '<div class="joi_panel">'.$performer.$description.'</div>';
+					$sessionHtml .= '<div class="joi_panel">'.$performer.$description.$location.'</div>';
 				}
-				
-			$dayHtml .= $sessionHtml . '</div>'; // End of row
+				//
+				// End building row contents
+				//
+
+			// Add row wrapping around row contents
+			$dayHtml .= '<div class="row '.$extra_row_css.'">'. $sessionHtml . '</div>';
 
 		}
 		$dayHtml .= '</div>';
@@ -191,7 +223,26 @@ function ingeni_joi_get_label( $uid ) {
 	return $label;
 }
 
+// Get a Joi location info
+function ingeni_joi_get_location( $program_ary ) {
+	$loc_info = $loc_name = $loc_venue = '';
 
+
+	if ( array_key_exists( 'title', $program_ary ) ) {
+		$loc_name = $program_ary['title'];
+	}
+	if ( array_key_exists( 'venue', $program_ary ) ) {
+		$loc_venue = $program_ary['venue'];;
+	}
+
+	if ( (strlen($loc_name) > 0) && (strlen($loc_venue) > 0) ) {
+		$loc_info = $loc_name . ', ' . $loc_venue;
+	} else {
+		$loc_info = $loc_name . $loc_venue;
+	}
+
+	return $loc_info;
+}
 
 
 
@@ -238,7 +289,7 @@ function ingeni_joi_events_list_all( $atts ) {
 // Remove all cached info from the WP DB
 //
 function ingeni_joi_clear_cache( ) {
-	delete_option(JOI_CACHE_TIMEOUT);
+	delete_option(JOI_CACHE_TIMEOUT_DATE);
 	delete_option(JOI_CACHED_EVENT_INFO);
 	delete_option(JOI_CACHED_PROGRAM_INFO);
 	delete_option(JOI_CACHED_SESSION_INFO);
@@ -267,7 +318,6 @@ function ingeni_joi_register_js() {
 add_action( 'wp_enqueue_scripts', 'ingeni_joi_register_js' );
 
 
-
 //
 // Custom CSS
 //
@@ -282,15 +332,9 @@ function ingeni_joi_enqueue_admin_scripts() {
 add_action( 'admin_enqueue_scripts', 'ingeni_joi_enqueue_admin_scripts' );
 
 
-
-
-
-
-
 //
 // Admin functions
 //
-
 add_action('admin_menu', 'ingeni_joi_submenu_page');
 function ingeni_joi_submenu_page() {
 	add_submenu_page( 'tools.php', 'Joi Events', 'Joi Events', 'manage_options', 'ingeni_joi_options', 'ingeni_joi_options_page' );
@@ -298,7 +342,6 @@ function ingeni_joi_submenu_page() {
 
 function ingeni_joi_options_page() {
 	global $ingeniJoiEventsApi;
-
 
 	if ( !$ingeniJoiEventsApi ) {
 		$token = get_option(JOI_PRIVATE_TOKEN);
@@ -332,6 +375,12 @@ function ingeni_joi_options_page() {
 				try {
 					update_option(JOI_PRIVATE_TOKEN, $_POST[JOI_PRIVATE_TOKEN] );
 					update_option(JOI_API_URL, $_POST[JOI_API_URL] );
+					update_option(JOI_CACHE_MINS, $_POST[JOI_CACHE_MINS] );
+					$debug_mode = 0;
+					if ( isset($_POST[JOI_API_DEBUG]) ) {
+						$debug_mode = 1;
+					}
+					update_option(JOI_API_DEBUG, $debug_mode );
 
 					echo('<div class="updated"><p><strong>Settings saved...</strong></p></div>');
 
@@ -359,9 +408,25 @@ function ingeni_joi_options_page() {
 			echo('<tr valign="top">');
 				echo('<td>Joi Events API URL</td><td><input type="text" name="'.JOI_API_URL.'" value="'.$url.'"></td>'); 
 			echo('</tr>');
-			echo('<tr valign="top">');
+			echo('<tr valign="top hide">');
 				echo('<td>Joi Events API Private Token</td><td><input type="text" name="'.JOI_PRIVATE_TOKEN.'" value="'.get_option(JOI_PRIVATE_TOKEN).'"></td>'); 
 			echo('</tr>');
+
+			echo('<tr valign="top">'); 
+				echo('<td>Cache Timeout (mins)</td><td><input type="number" name="'.JOI_CACHE_MINS.'" min="1" max="1440" value="'.get_option(JOI_CACHE_MINS,60).'" /></td>'); 
+			echo('</tr>');
+			
+			echo('<tr valign="top">');
+				$debug_mode = get_option(JOI_API_DEBUG, 0);
+				$checked = '';
+				if ( ( $debug_mode < 0) || ( $debug_mode > 1) ) {
+					$debug_mode = 0;
+				}
+				if ( $debug_mode == 1 ) {
+					$checked = 'checked';
+				}
+				echo('<td>&nbsp;</td><td><input type="checkbox" name="'.JOI_API_DEBUG.'"  value="'.$debug_mode.'" '.$checked.'/><label>Debug mode</label></td>'); 
+			echo('</tr>');	
 
 
 			
