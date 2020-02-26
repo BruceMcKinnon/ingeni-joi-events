@@ -4,7 +4,7 @@ Contributors: Bruce McKinnon
 Tags: eventbrite
 Requires at least: 5
 Tested up to: 5.3
-Stable tag: 2020.03
+Stable tag: 2020.04
 
 Display a list of event sessions for a specific organiser
 
@@ -65,4 +65,7 @@ To hide labels of a perticular colour, use the hidelabelcolors parameter with HT
 
 v2020.01 - Initial version
 v2020.02 - Minor date formatting change
+v2020.03 - Added track nesting, and the hidelabelcolors option for the shortcode
+v2020.04 - Fixed update URL
+
 

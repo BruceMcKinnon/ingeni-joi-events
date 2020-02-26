@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Joi Events
-Version: 2020.03
+Version: 2020.04
 Plugin URI: http://ingeni.net
 Author: Bruce McKinnon - ingeni.net
 Author URI: http://ingeni.net
@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // v2020.01 - Initial release
 // v2020.02 - Minor date formatting change
 // v2020.03 - Added track nesting, and the hidelabelcolors option for the shortcode
-//
+// v2020.04 - Fixed update URL
 
 
 
@@ -354,7 +354,7 @@ function ingeni_load_joi() {
 	// Init auto-update from GitHub repo
 	require 'plugin-update-checker/plugin-update-checker.php';
 	$myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
-		'https://github.com/BruceMcKinnon/ingeni-eventbrite',
+		'https://github.com/BruceMcKinnon/ingeni-joi-events',
 		__FILE__,
 		'ingeni-joi-events'
 	);
