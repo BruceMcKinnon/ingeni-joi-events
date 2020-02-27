@@ -15,7 +15,7 @@
 	border-bottom: #F5F5F5 2px solid;
 }
 .joi_day > .row.accordion_wrap {
-	border-bottom-width: 0;
+	/*border-bottom-width: 0;*/
 }
 
 .joi_day > .row.hide {
@@ -32,7 +32,11 @@
 }
 
 .joi_day > .row.track_wrapper {
-	border: #F5F5F5 2px solid;
+	border: #F5F5F5 1px solid;
+	border-top: #ffffff 2px solid;
+	background-color: #F5F5F5;
+	padding-left: 0;
+	padding-right: 0;
 }
 
 .joi_day .cell {
@@ -47,6 +51,16 @@
 	.joi_day > .row > .cell {
 		padding: 10px 15px;
 	}
+}
+
+.joi_day > .row.track_wrapper > .cell > .row {
+	margin-left: -15px;
+	margin-right: -15px;
+}
+
+.joi_day > .row.track_wrapper > .cell > .row:not(.accordion_wrap) {
+	padding-left: 10px;
+	padding-right: 10px;
 }
 
 
@@ -143,7 +157,6 @@
 
 /* Style the buttons that are used to open and close the accordion panel */
 .joi_accordion {
-  background-color: #F5F5F5;
   cursor: pointer;
   padding: 5px 10px;
   width: 100%;

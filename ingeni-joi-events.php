@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Joi Events
-Version: 2020.04
+Version: 2020.05
 Plugin URI: http://ingeni.net
 Author: Bruce McKinnon - ingeni.net
 Author URI: http://ingeni.net
@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // v2020.02 - Minor date formatting change
 // v2020.03 - Added track nesting, and the hidelabelcolors option for the shortcode
 // v2020.04 - Fixed update URL
+// v2020.05 - Re-did track nesting code. Added the groupcolors option to the shortcode
 
 
 
@@ -58,12 +59,15 @@ $ingeniJoiEventsApi;
 //
 // Main function for calling Joi, saving event data and managing cached data
 //
-function ingeni_joi_get_all_events( $hide_label_colors ) {
+function ingeni_joi_get_all_events( $hide_label_colors, $group_label_colors ) {
 	global $ingeniJoiEventsApi;
 
 	$debugMode = get_option(JOI_API_DEBUG, 0);
 
 	$hide_colors = explode(',',$hide_label_colors);
+
+	$track_label_colors = explode(',',$group_label_colors);
+
 
 	// If the cache is empty, go an get a live refresh
 	if ( !$ingeniJoiEventsApi ) {
@@ -71,6 +75,7 @@ function ingeni_joi_get_all_events( $hide_label_colors ) {
 		$url = get_option(JOI_API_URL, JOI_DEFAULT_URL);
 		$ingeniJoiEventsApi = new IngeniJoiEventsApi( $url, $token );
 	}
+$ingeniJoiEventsApi->fb_log('track colours: '.print_r($track_label_colors,true));
 
 	$cache_expiry = new DateTime("2020-01-01");
 	$cache_expiry = get_option(JOI_CACHE_TIMEOUT_DATE, $cache_expiry);
@@ -149,7 +154,9 @@ function ingeni_joi_get_all_events( $hide_label_colors ) {
 
 				$label = '';
 				if ( array_key_exists('labels',$item) ) {
+//$ingeniJoiEventsApi->fb_log('labels: '.print_r($item['labels'],true));
 					if (count($item['labels']) > 0) {
+						// Get the primary label colour
 						$theLabel = ingeni_joi_get_label($item['labels'][0]);
 						$label_title = $theLabel['label'];
 						$label_color = $theLabel['color'];
@@ -163,7 +170,44 @@ function ingeni_joi_get_all_events( $hide_label_colors ) {
 							$label = '<div class="joi_label"><span style="background-color: '.$label_color . ';">'.$label_title.'</span></div>';
 						}
 					}
+
 					// Is this session in a track?
+					// Now see if this row is part of a grouped track
+					// Should this row be grouped?
+
+					$item_track = joi_group_this_label($item['labels'], $track_label_colors) ;
+//$ingeniJoiEventsApi->fb_log('item_track: '.$item['title'].'='.$item_track.' | current='.$current_track);
+					if ($item_track != '') {
+
+
+							if ($current_track != $item_track) {
+								if ($current_track == '') {
+									$track_wrapper_start = '<div class="row track_wrapper"><div class="cell small-12 full"><h4>'.$item_track.'</h4>';
+								} else {
+
+									$track_wrapper_start = '</div><!-- 1 --></div>';
+									$track_wrapper_start .= '<div class="row track_wrapper"><div class="cell small-12 full"><h4>'.$item_track.'</h4>';
+								}
+							} else {
+								$track_wrapper_start = '';
+							}
+							if ( (strlen($current_track) > 0) && ($item_track == '') ) {
+								$track_wrapper_end = '</div><!-- 2 --></div>';
+							}
+							$current_track = $item_track;
+
+					} else {
+						$track_wrapper_start = '';
+						$track_wrapper_end = '';
+
+						if ( (strlen($current_track) > 0) && ($item_track == '') ) {
+							$track_wrapper_start = '</div><!-- 3 '.$current_track.' | '.$item_track.'--></div>';
+						}
+						$current_track = '';
+					}
+
+//start
+/*
 					if (count($item['labels']) > 1) {
 						$theLabel= ingeni_joi_get_label($item['labels'][1]);
 						if ( $theLabel['color'] == $track_label_color) {
@@ -197,6 +241,22 @@ function ingeni_joi_get_all_events( $hide_label_colors ) {
 						}
 						$current_track = '';
 					}
+					*/
+//End
+
+				} else {
+
+//$ingeniJoiEventsApi->fb_log('no labels: '.$item['title'].'='.$item_track.' | current='.$current_track);
+
+						// In this circumstance, we get a grouped session, followed by a session with no labels.
+						$track_wrapper_start = '';
+						$track_wrapper_end = '';
+
+						if ( (strlen($current_track) > 0) && ($item_track == '') ) {
+							$track_wrapper_start = '</div><!-- 4 '.$current_track.'--></div>';
+						}
+						$current_track = '';
+
 				}
 
 				$performer = '';
@@ -238,8 +298,9 @@ function ingeni_joi_get_all_events( $hide_label_colors ) {
 				//
 
 			// Add row wrapping around row contents
-			$dayHtml .= $track_wrapper_start.'<div class="row '.$extra_row_css.'">'. $sessionHtml . '</div>'.$track_wrapper_end;
-
+			if ( strlen(trim($item['title'])) > 0 ) {
+				$dayHtml .= $track_wrapper_start.'<div class="row '.$extra_row_css.'">'. $sessionHtml . '</div>'.$track_wrapper_end;
+			}
 		}
 		$dayHtml .= '</div>';
 		$allEventsHtml .= $day_h3 . $dayHtml;
@@ -248,6 +309,37 @@ function ingeni_joi_get_all_events( $hide_label_colors ) {
 
 	return $allEventsHtml;
 }
+
+
+function joi_group_this_label( &$labels, &$track_label_colors ) {
+	$retTrackLabel = '';
+
+//global $ingeniJoiEventsApi;
+
+
+
+	$label_count = count($labels);
+//$ingeniJoiEventsApi->fb_log('start ['.$label_count.']: '.print_r($labels,true));
+	if ($label_count > 0) {
+//$ingeniJoiEventsApi->fb_log('start: '.print_r($labels,true));
+		for ( $idx = 0; $idx < $label_count; $idx++ ) {
+
+			$session_label = ingeni_joi_get_label( $labels[$idx] );
+//$ingeniJoiEventsApi->fb_log('track colours: '.print_r($session_label,true).' = '. print_r($track_label_colors,true));
+
+			if ( in_array($session_label['color'], $track_label_colors) ) {
+				$retTrackLabel = $session_label['label'];
+				$idx = $label_count;
+				break;
+			}
+		}
+	}
+
+	return $retTrackLabel;
+}
+
+
+
 
 // Get a Joi Event performer/presenter name
 function ingeni_joi_get_performer( $uid ) {
@@ -268,8 +360,12 @@ function ingeni_joi_get_label( $uid, $required_color = '' ) {
 
 	$label = '';
 
+//global $ingeniJoiEventsApi;
+//$ingeniJoiEventsApi->fb_log('looking for: '.$uid);
+
 	if ( array_key_exists( $uid, $json['session_labels'] ) ) {
 		$label = $json['session_labels'][$uid];
+//$ingeniJoiEventsApi->fb_log($uid.' = '.print_r($label,true));
 	}
 
 	return $label;
@@ -306,6 +402,7 @@ function ingeni_joi_events_list_all( $atts ) {
 		'class' => 'joi_events_wrapper',
 		'accordion' => 1,
 		'hidelabelcolors' => '',
+		'groupcolors' => '',
 	), $atts );
 
 
@@ -324,7 +421,7 @@ function ingeni_joi_events_list_all( $atts ) {
 		$returnHtml .= '<div class="'.$params["class"].$extra_css.'">';
 	}
 
-	$returnHtml .= ingeni_joi_get_all_events( $params["hidelabelcolors"] );
+	$returnHtml .= ingeni_joi_get_all_events( $params["hidelabelcolors"], $params["groupcolors"] );
 
 	if ( strlen($params["class"]) > 0 ) {
 		$returnHtml .= '</div>';

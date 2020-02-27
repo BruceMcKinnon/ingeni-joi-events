@@ -4,7 +4,7 @@ Contributors: Bruce McKinnon
 Tags: eventbrite
 Requires at least: 5
 Tested up to: 5.3
-Stable tag: 2020.04
+Stable tag: 2020.05
 
 Display a list of event sessions for a specific organiser
 
@@ -67,5 +67,5 @@ v2020.01 - Initial version
 v2020.02 - Minor date formatting change
 v2020.03 - Added track nesting, and the hidelabelcolors option for the shortcode
 v2020.04 - Fixed update URL
-
+v2020.05 - Re-did track nesting code. Added the groupcolors option to the shortcode
 
