@@ -4,7 +4,7 @@ Contributors: Bruce McKinnon
 Tags: eventbrite
 Requires at least: 5
 Tested up to: 5.3
-Stable tag: 2020.08
+Stable tag: 2020.09
 
 Display a list of event sessions for a specific organiser
 
@@ -72,4 +72,7 @@ v2020.06 - Added extra trapping in case the 'color' field is not included in lab
 		- Extra performer info included, plus social icons.
 v2020.07 - Does a sort of the days session to make sure all sessions of the same track are together.
 v2020.08 - Updating code hooked in wrong location!
+v2020.09 - Support the display of multiple performers.
+		- Better parsing of session labels, ignoring track labels.
+
 
