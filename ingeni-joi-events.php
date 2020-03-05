@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Joi Events
-Version: 2020.06
+Version: 2020.07
 Plugin URI: http://ingeni.net
 Author: Bruce McKinnon - ingeni.net
 Author URI: http://ingeni.net
@@ -34,6 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // v2020.05 - Re-did track nesting code. Added the groupcolors option to the shortcode
 // v2020.06 - Added extra trapping in case the 'color' field is not included in labels.
 //					- Extra performer info included, plus social icons.
+// v2020.07 - Does a sort of the days session to make sure all sessions of the same track are together.
 
 
 
@@ -85,7 +86,7 @@ function ingeni_joi_get_all_events( $hide_label_colors, $group_label_colors ) {
 		$url = get_option(JOI_API_URL, JOI_DEFAULT_URL);
 		$ingeniJoiEventsApi = new IngeniJoiEventsApi( $url, $token );
 	}
-$ingeniJoiEventsApi->fb_log('track colours: '.print_r($track_label_colors,true));
+//$ingeniJoiEventsApi->fb_log('track colours: '.print_r($track_label_colors,true));
 
 	$cache_expiry = new DateTime("2020-01-01");
 	$cache_expiry = get_option(JOI_CACHE_TIMEOUT_DATE, $cache_expiry);
@@ -147,6 +148,9 @@ $ingeniJoiEventsApi->fb_log('track colours: '.print_r($track_label_colors,true))
 		$track_label_color = '#000000';
 		$track_wrapper_start = '';
 		$track_wrapper_end = '';
+
+
+		$day = joi_sort_day( $day, $track_label_colors );
 
 		foreach($day as $item) {
 			if (strlen($day_h3) == 0) {
@@ -334,12 +338,123 @@ $debug_info = '';
 }
 
 
+//
+// Work through the days items, making sure all grouped sessions are in fact grouped together and don't have randon sessions inserted
+//
+function joi_sort_day( $day, $track_label_colors ) {
+	global $ingeniJoiEventsApi;
+
+	$prev_item_labels = '';
+	$next_item_labels = '';
+	$curr_item_labels = '';
+	$curr_in_track = false;
+
+	$prev_start = $next_start = $curr_start = '';
+
+	for ($idx = 0; $idx < count($day); $idx++) {
+		$prev_start = $curr_start;
+		$curr_start = $day[$idx]['start'];
+		if ( ($idx+1) < count($day)) {
+			$next_start = $day[$idx+1]['start'];
+		} else {
+			$next_start = '';
+		}
+		// Does this session and the previous one and the next one all start at the same time?
+		$prev_in_track = false;
+		if ( ($prev_start == $curr_start) && ($curr_start == $next_start) ) {
+//$ingeniJoiEventsApi->fb_log('three in a row:'.$curr_start.' ['.$day[$idx]['on_day'].']');
+			// In this case, we have three session all starting at the same time
+			// Make sure you keep a copy of the previous items labels
+			if ( is_array($curr_item_labels) ) {
+				$prev_item_labels = $curr_item_labels;
+
+				// Was the prevous session in track?
+				$track_label = joi_group_this_label( $prev_item_labels, $track_label_colors );
+				if ( $track_label != '' ) {
+					$prev_in_track = true;
+				}
+
+			}
+
+
+			// Get the current item labels
+			if ( array_key_exists('labels', $day[$idx] ) ) {
+				$curr_item_labels = $day[$idx]['labels'];
+			} else {
+				$curr_item_labels = '';
+			}
+
+
+			// Is the current session in track?
+			$curr_in_track = false;
+			$track_label = joi_group_this_label( $curr_item_labels, $track_label_colors );
+			if ( $track_label != '' ) {
+				$curr_in_track = true;
+			}
+
+
+			// Is the next session in track?
+			$next_in_track = false;
+			if (($idx+1) < count($day) ) {
+
+				// Get the next item labels
+				if ( array_key_exists('labels', $day[$idx+1] ) ) {
+					$next_item_labels = $day[$idx+1]['labels'];
+
+					$track_label = joi_group_this_label( $next_item_labels, $track_label_colors );
+					if ( $track_label != '' ) {
+						$next_in_track = true;
+					}
+
+				} else {
+					$next_item_labels = '';
+					$next_in_track = false;
+				}
+
+			} else {
+				$next_start = '';
+				$next_in_track = false;
+			}
+
+			// Now we have all of the info, the test is:
+			//
+			// if ( ( x-1 && x+1 ) && ( !x ) ) {
+			//		swap the position of the current and next rows
+			// }
+			//
+//$ingeniJoiEventsApi->fb_log('test is '.joi_bool_str($prev_in_track).' '.joi_bool_str($next_in_track).' '.joi_bool_str($curr_in_track));
+			if ( ( $prev_in_track && $next_in_track ) && ( !$curr_in_track ) ) {
+//$ingeniJoiEventsApi->fb_log('current sitting between two tracks!!!!!');
+				// Time to swap the position of the current session with the next session
+				joi_move_element( $day, ($idx+1), $idx);
+			}
+
+		}
+	}
+
+	return $day;
+}
+
+function joi_bool_str($value) {
+	$retStr = 'false';
+	if ($value) {
+		$retStr = 'true';
+	}
+	return $retStr;
+}
+
+function joi_move_element(&$array, $a, $b) {
+//$ingeniJoiEventsApi->fb_log('splicing:'.$a.' = '.$b);
+	$out = array_splice($array, $a, 1);
+	array_splice($array, $b, 0, $out);
+}
+
+
+
 function joi_group_this_label( &$labels, &$track_label_colors ) {
 	$retTrackLabel = '';
 
 //global $ingeniJoiEventsApi;
-
-
 
 	$label_count = count($labels);
 //$ingeniJoiEventsApi->fb_log('start ['.$label_count.']: '.print_r($labels,true));
