@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Joi Events
-Version: 2020.05
+Version: 2020.06
 Plugin URI: http://ingeni.net
 Author: Bruce McKinnon - ingeni.net
 Author URI: http://ingeni.net
@@ -32,6 +32,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // v2020.03 - Added track nesting, and the hidelabelcolors option for the shortcode
 // v2020.04 - Fixed update URL
 // v2020.05 - Re-did track nesting code. Added the groupcolors option to the shortcode
+// v2020.06 - Added extra trapping in case the 'color' field is not included in labels.
+//					- Extra performer info included, plus social icons.
+
+
+
+
+
+// Sticky header - https://www.w3schools.com/howto/howto_js_sticky_header.asp
+
+
 
 
 
@@ -152,15 +162,28 @@ $ingeniJoiEventsApi->fb_log('track colours: '.print_r($track_label_colors,true))
 				$sessionHtml = '<div class="cell small-3 medium-2">'.date("g:i a",strtotime($item['start'])).'</div>';
 				$sessionHtml .= '<div class="cell small-3 medium-2">'.date("g:i a",strtotime($item['end'])).'</div>';
 
+$debug_info = '';
 				$label = '';
 				if ( array_key_exists('labels',$item) ) {
 //$ingeniJoiEventsApi->fb_log('labels: '.print_r($item['labels'],true));
 					if (count($item['labels']) > 0) {
 						// Get the primary label colour
 						$theLabel = ingeni_joi_get_label($item['labels'][0]);
-						$label_title = $theLabel['label'];
-						$label_color = $theLabel['color'];
+						$label_title = '';
+						$label_color = '';
 
+						if ( is_array($theLabel) ) {
+
+							if ( array_key_exists('label',$theLabel) ) {
+								$label_title = $theLabel['label'];
+							}
+							if ( array_key_exists('color',$theLabel) ) {
+								$label_color = $theLabel['color'];
+							}
+
+						}
+
+						$debug_info = ' [' . $label_title . ' | ' . $label_color .']';
 						// Should this row be hidden?
 						if (in_array($label_color,$hide_colors) ) {
 							$label_title = '';
@@ -291,7 +314,7 @@ $ingeniJoiEventsApi->fb_log('track colours: '.print_r($track_label_colors,true))
 				if (strlen(trim($performer.$description)) > 0) {
 					$extra_row_css .= 'accordion_wrap';
 					$sessionHtml = '<button class="joi_accordion">'.$sessionHtml.'</button>';
-					$sessionHtml .= '<div class="joi_panel">'.$performer.$description.$location.'</div>';
+					$sessionHtml .= '<div class="joi_panel">'.$description.$location.$performer.'</div>';
 				}
 				//
 				// End building row contents
@@ -326,11 +349,14 @@ function joi_group_this_label( &$labels, &$track_label_colors ) {
 
 			$session_label = ingeni_joi_get_label( $labels[$idx] );
 //$ingeniJoiEventsApi->fb_log('track colours: '.print_r($session_label,true).' = '. print_r($track_label_colors,true));
-
-			if ( in_array($session_label['color'], $track_label_colors) ) {
-				$retTrackLabel = $session_label['label'];
-				$idx = $label_count;
-				break;
+			if ( is_array($session_label) ) {
+				if ( array_key_exists('color',$session_label) ) {
+					if ( in_array($session_label['color'], $track_label_colors) ) {
+						$retTrackLabel = $session_label['label'];
+						$idx = $label_count;
+						break;
+					}
+				}
 			}
 		}
 	}
@@ -340,6 +366,43 @@ function joi_group_this_label( &$labels, &$track_label_colors ) {
 
 
 
+function ingeni_joi_get_field($key, $target_ary) {
+	$value = '';
+	if ( array_key_exists($key,$target_ary) ) {
+		$value = $target_ary[$key];
+	}
+
+	return $value;
+}
+
+function ingeni_joi_get_icon($type) {
+	$type = strtolower($type);
+	$retHtml = $type;
+
+	switch ($type) {
+		case 'twitter':
+			$retHtml = '<img src="'.plugins_url('icons/twitter_24px.svg', __FILE__).'" alt="'.$type.'" />';
+		break;
+		case 'facebook':
+			$retHtml = '<img src="'.plugins_url('icons/facebook_24px.svg', __FILE__).'" alt="'.$type.'" />';
+		break;
+		case 'instagram':
+			$retHtml = '<img src="'.plugins_url('icons/instagram_24px.svg', __FILE__).'" alt="'.$type.'" />';
+		break;
+		case 'linkedin':
+			$retHtml = '<img src="'.plugins_url('icons/linkedin_24px.svg', __FILE__).'" alt="'.$type.'" />';
+		break;
+		case 'youtube':
+			$retHtml = '<img src="'.plugins_url('icons/youtube_24px.svg', __FILE__).'" alt="'.$type.'" />';
+		break;
+		case 'web':
+			$retHtml = '<img src="'.plugins_url('icons/web_24px.svg', __FILE__).'" alt="'.$type.'" />';
+		break;
+	}
+
+	return $retHtml;
+}
+
 
 // Get a Joi Event performer/presenter name
 function ingeni_joi_get_performer( $uid ) {
@@ -348,7 +411,47 @@ function ingeni_joi_get_performer( $uid ) {
 	$performer_name = '';
 
 	if ( array_key_exists( $uid, $json['performers'] ) ) {
-		$performer_name = $json['performers'][$uid]['name'];
+
+		$name = ingeni_joi_get_field('name',$json['performers'][$uid]);
+		$title = ingeni_joi_get_field('line1',$json['performers'][$uid]);
+		$line2 = ingeni_joi_get_field('line2',$json['performers'][$uid]);
+		$bio = ingeni_joi_get_field('bio',$json['performers'][$uid]);
+		$photo = ingeni_joi_get_field('photoUrl',$json['performers'][$uid]);
+		$logo = ingeni_joi_get_field('logoUrl',$json['performers'][$uid]);
+		if ( ($photo == '') && ($logo != '') ) {
+			$photo = $logo;
+		}
+
+		//$title = $line1;
+		if ( ($title != '') && ($line2 != '') ) {
+			$title .= ', ';
+		}
+		$title .= $line2;
+
+		$performer_name = '<header>';
+		if ($photo != '') {
+			$performer_name .= '<div class="photo" style="background-image: url('.$photo.');"></div>';
+		}
+		
+		$performer_name .= '<div class="name">'.$name.'<p class="title">'.$title.'</p></div>';
+		$performer_name .= '</header>';
+
+		$performer_name .= '<div class="bio">'.$bio.'</div>';
+
+		$social_links = '';
+		if ( array_key_exists('social',$json['performers'][$uid]) ) {
+			$socials_ary = $json['performers'][$uid]['social'];
+
+			if ( is_array($socials_ary) ) {
+				for ($idx = 0; $idx < count($socials_ary); $idx++) {
+					if (strlen(ingeni_joi_get_field('url',$socials_ary[$idx])) > 0) {
+						$social_links .= '<a href="'.ingeni_joi_get_field('url',$socials_ary[$idx]).'" target="_blank">'.ingeni_joi_get_icon(ingeni_joi_get_field('type',$socials_ary[$idx])).'</a>';
+					}
+				}
+			}
+		}
+
+		$performer_name .= '<div class="social_links">'.$social_links .'</div>';
 	}
 
 	return trim($performer_name);
@@ -366,6 +469,11 @@ function ingeni_joi_get_label( $uid, $required_color = '' ) {
 	if ( array_key_exists( $uid, $json['session_labels'] ) ) {
 		$label = $json['session_labels'][$uid];
 //$ingeniJoiEventsApi->fb_log($uid.' = '.print_r($label,true));
+	} else {
+		// If not in session lables, have a look in tracks labels
+		if ( array_key_exists( $uid, $json['program_labels'] ) ) {
+			$label = $json['program_labels'][$uid];
+		}
 	}
 
 	return $label;

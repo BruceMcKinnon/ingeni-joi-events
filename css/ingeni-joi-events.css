@@ -12,6 +12,8 @@
 
 .joi_day > .row {
 	display: block;
+	border-left: #F5F5F5 0px solid;
+	border-right: #F5F5F5 0px solid;
 	border-bottom: #F5F5F5 2px solid;
 }
 .joi_day > .row.accordion_wrap {
@@ -34,9 +36,11 @@
 .joi_day > .row.track_wrapper {
 	border: #F5F5F5 1px solid;
 	border-top: #ffffff 2px solid;
-	background-color: #F5F5F5;
 	padding-left: 0;
 	padding-right: 0;
+}
+.joi_day > .row.track_wrapper > .cell {
+	padding-bottom: 0;
 }
 
 .joi_day .cell {
@@ -54,6 +58,7 @@
 }
 
 .joi_day > .row.track_wrapper > .cell > .row {
+	background-color: #F5F5F5;
 	margin-left: -15px;
 	margin-right: -15px;
 }
@@ -163,7 +168,8 @@
   text-align: left;
   border: none;
   outline: none;
-  transition: 0.4s;
+	transition: 0.4s;
+	/*background-color: #ffffff;*/
 }
 
 button.joi_accordion:after {
@@ -180,6 +186,15 @@ button.joi_accordion:after {
 	-ms-transform: rotate(135deg);
 	transform: rotate(135deg);
 	width: 10px;
+}
+
+.track_wrapper .row .cell:nth-child(2),
+.joi_accordion .cell:nth-child(2) {
+	padding-left: 8px;
+}
+.track_wrapper .row .cell:nth-child(3),
+.joi_accordion .cell:nth-child(3) {
+	padding-left: 12px;
 }
 
 /* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
@@ -217,6 +232,50 @@ button.joi_accordion.active:after {
 	margin: 10px 0;
 }
 
+.joi_panel .performer {
+	padding: 5px 10px;
+	border: 2px solid #F5F5F5 ;
+}
+
+.joi_panel .performer header {
+	overflow: hidden;
+	margin: 15px 0;
+	display: flex;
+  align-items: center;
+}
+.joi_panel .performer .photo {
+	height: 60px;
+	width:60px;
+	border-radius: 30px;
+	margin: 0 15px 0 0;
+	background-repeat: no-repeat;
+	background-size: cover;
+	background-position: center;
+}
+.joi_panel .performer .name {
+	font-weight: bold;
+}
+.joi_panel .performer .photo {
+	float: left;
+}
+.joi_panel .performer .name p.title,
+.joi_panel .performer .bio {
+	font-weight: normal;
+	font-size: 13px;
+}
+.joi_panel .performer .name p.title {
+	margin-bottom: 0;
+}
+.joi_panel .performer .social_links a img {
+	height: 24px;
+	width: 24px;
+	margin: 15px 15px 15px 0;
+}
+
+.joi_panel .location {
+	display: none;
+}
+
 .joi_panel .description p {
-	margin-bottom: 3px;
+	margin-bottom: 5px;
 }
