@@ -20,16 +20,12 @@
 	/*border-bottom-width: 0;*/
 }
 
-.joi_day > .row.hide {
-	/*display: none;*/
-}
 .joi_day > .row.show {
 	display: block;
 }
 
 .joi_day > .row > button {
 	display: block;
-	/*border-bottom: #ffffff 2px solid;*/
 	margin-bottom: 2px;
 }
 
@@ -169,7 +165,6 @@
   border: none;
   outline: none;
 	transition: 0.4s;
-	/*background-color: #ffffff;*/
 }
 
 button.joi_accordion:after {
@@ -224,6 +219,7 @@ button.joi_accordion.active:after {
 	padding: 3px 5px;
 	border-radius: 2px;
 	color: #ffffff;
+	white-space: pre;
 }
 
 .joi_panel .performer, .joi_panel .description, .joi_panel .location {
@@ -278,4 +274,17 @@ button.joi_accordion.active:after {
 
 .joi_panel .description p {
 	margin-bottom: 5px;
+}
+
+
+.sticky_container {
+	height: 50px;
+	position: -webkit-sticky;
+  position: sticky;
+	top: 0;
+	background-color: #ffffff;
+}
+.sticky_container h3 {
+	margin: 0;
+	line-height: 50px;
 }

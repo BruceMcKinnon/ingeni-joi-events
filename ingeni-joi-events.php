@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Joi Events
-Version: 2020.09
+Version: 2020.10
 Plugin URI: http://ingeni.net
 Author: Bruce McKinnon - ingeni.net
 Author URI: http://ingeni.net
@@ -38,13 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // v2020.08 - Updating code hooked in wrong location!
 // v2020.09 - Support the display of multiple performers.
 //					- Better parsing of session labels, ignoring track labels.
-
-
-
-// Sticky header - https://www.w3schools.com/howto/howto_js_sticky_header.asp
-
-
-
+// v2020.10	- Added support for CSS3 sticky positioning on h3 headers.
 
 
 define("SAVE_JOI_SETTINGS", "Save Settings...");
@@ -137,12 +131,12 @@ function ingeni_joi_get_all_events( $hide_label_colors, $group_label_colors ) {
 	$timeline = unserialize( get_option(JOI_CACHED_TIMELINE) );
 
 	$allEventsHtml = "";
-	$day_h3 = "";
+	$day_header = "";
 
 	// Construct the front-end HTML
 	foreach($timeline as $day) {
 		$dayHtml = '<div class="joi_day">';
-		$day_h3 = '';
+		$day_header = '';
 
 		// Current track id
 		$current_track = '';
@@ -154,8 +148,8 @@ function ingeni_joi_get_all_events( $hide_label_colors, $group_label_colors ) {
 		$day = joi_sort_day( $day, $track_label_colors );
 
 		foreach($day as $item) {
-			if (strlen($day_h3) == 0) {
-				$day_h3 = '<h3>'.date("D j M Y",strtotime($item['session_date'])).'</h3>';
+			if (strlen($day_header) == 0) {
+				$day_header = '<div class="sticky_container"><h3>'.date("D j M Y",strtotime($item['session_date'])).'</h3></div>';
 			}
 
 				$item_track = '';
@@ -305,7 +299,7 @@ $debug_info = '';
 			}
 		}
 		$dayHtml .= '</div>';
-		$allEventsHtml .= $day_h3 . $dayHtml;
+		$allEventsHtml .= $day_header . $dayHtml;
 		
 	}
 
