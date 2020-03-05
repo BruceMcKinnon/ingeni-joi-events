@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Joi Events
-Version: 2020.07
+Version: 2020.08
 Plugin URI: http://ingeni.net
 Author: Bruce McKinnon - ingeni.net
 Author URI: http://ingeni.net
@@ -35,7 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // v2020.06 - Added extra trapping in case the 'color' field is not included in labels.
 //					- Extra performer info included, plus social icons.
 // v2020.07 - Does a sort of the days session to make sure all sessions of the same track are together.
-
+// v2020.08 - Updating code hooked in wrong location!
 
 
 
@@ -679,7 +679,7 @@ function ingeni_load_joi() {
 		'ingeni-joi-events'
 	);
 }
-add_action( 'wp_enqueue_scripts', 'ingeni_load_joi' );
+add_action( 'init', 'ingeni_load_joi' );
 
 
 //
