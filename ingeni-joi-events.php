@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Joi Events
-Version: 2020.10
+Version: 2020.11
 Plugin URI: http://ingeni.net
 Author: Bruce McKinnon - ingeni.net
 Author URI: http://ingeni.net
@@ -40,6 +40,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //					- Better parsing of session labels, ignoring track labels.
 // v2020.10	- Added support for CSS3 sticky positioning on h3 headers.
 // v2020.11  - Added support for the dayheaderformat parameter
+
 
 
 define("SAVE_JOI_SETTINGS", "Save Settings...");
