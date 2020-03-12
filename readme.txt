@@ -4,7 +4,7 @@ Contributors: Bruce McKinnon
 Tags: eventbrite
 Requires at least: 5
 Tested up to: 5.3
-Stable tag: 2020.10
+Stable tag: 2020.11
 
 Display a list of event sessions for a specific organiser
 
@@ -53,11 +53,19 @@ If you wish to apply your own custom CSS to the list, add the 'class' parameter 
 Add the appropriate CSS to the the CCS file of your Wordpress file.
 
 
-To hide labels of a perticular colour, use the hidelabelcolors parameter with HTML hex colours separated by a comma.
+To hide labels of a particular colour, use the hidelabelcolors parameter with HTML hex colours separated by a comma.
 
 [joi-events-list-all hidelabelcolors="#xxxxxx,#yyyyyy,#zzzzzz"]
 
 
+
+To set the day header format, specify a valid PPHP date() format.
+
+For example: [joi-events-list-all dayheaderformat="D j M Y"]
+
+displays the date as Fri 13 March 2020
+
+The default is 'l j M' which displays Friday 13 March. For the full range of PHP date format, see https://www.php.net/manual/en/function.date.php
 
 
 
@@ -75,4 +83,4 @@ v2020.08 - Updating code hooked in wrong location!
 v2020.09 - Support the display of multiple performers.
 		- Better parsing of session labels, ignoring track labels.
 v2020.10  - Added support for CSS3 sticky positioning on h3 headers.
-
+v2020.11  - Added support for the dayheaderformat parameter

@@ -39,6 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // v2020.09 - Support the display of multiple performers.
 //					- Better parsing of session labels, ignoring track labels.
 // v2020.10	- Added support for CSS3 sticky positioning on h3 headers.
+// v2020.11  - Added support for the dayheaderformat parameter
 
 
 define("SAVE_JOI_SETTINGS", "Save Settings...");
@@ -65,7 +66,7 @@ $ingeniJoiEventsApi;
 //
 // Main function for calling Joi, saving event data and managing cached data
 //
-function ingeni_joi_get_all_events( $hide_label_colors, $group_label_colors ) {
+function ingeni_joi_get_all_events( $hide_label_colors, $group_label_colors, $day_header_format = "D j M Y" ) {
 	global $ingeniJoiEventsApi;
 
 	$debugMode = get_option(JOI_API_DEBUG, 0);
@@ -149,7 +150,7 @@ function ingeni_joi_get_all_events( $hide_label_colors, $group_label_colors ) {
 
 		foreach($day as $item) {
 			if (strlen($day_header) == 0) {
-				$day_header = '<div class="sticky_container"><h3>'.date("D j M Y",strtotime($item['session_date'])).'</h3></div>';
+				$day_header = '<div class="sticky_container"><h3>'.date($day_header_format,strtotime($item['session_date'])).'</h3></div>';
 			}
 
 				$item_track = '';
@@ -610,6 +611,7 @@ function ingeni_joi_events_list_all( $atts ) {
 		'accordion' => 1,
 		'hidelabelcolors' => '',
 		'groupcolors' => '',
+		'dayheaderformat' => 'l j M',
 	), $atts );
 
 
@@ -628,7 +630,7 @@ function ingeni_joi_events_list_all( $atts ) {
 		$returnHtml .= '<div class="'.$params["class"].$extra_css.'">';
 	}
 
-	$returnHtml .= ingeni_joi_get_all_events( $params["hidelabelcolors"], $params["groupcolors"] );
+	$returnHtml .= ingeni_joi_get_all_events( $params["hidelabelcolors"], $params["groupcolors"], $params["dayheaderformat"] );
 
 	if ( strlen($params["class"]) > 0 ) {
 		$returnHtml .= '</div>';

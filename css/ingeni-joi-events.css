@@ -59,6 +59,10 @@
 	margin-right: -15px;
 }
 
+.joi_day > .row.track_wrapper > .cell > .row.accordion_wrap > button.joi_accordion {
+	background-color: #F5F5F5 !important;
+}
+
 .joi_day > .row.track_wrapper > .cell > .row:not(.accordion_wrap) {
 	padding-left: 10px;
 	padding-right: 10px;
@@ -157,13 +161,13 @@
 
 
 /* Style the buttons that are used to open and close the accordion panel */
-.joi_accordion {
+button.joi_accordion, .joi_accordion {
   cursor: pointer;
-  padding: 5px 10px;
-  width: 100%;
-  text-align: left;
-  border: none;
-  outline: none;
+  padding: 5px 10px !important;;
+  width: 100% !important;;
+  text-align: left !important;;
+  border: none !important;;
+  outline: none !important;;
 	transition: 0.4s;
 }
 
