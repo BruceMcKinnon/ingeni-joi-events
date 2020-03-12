@@ -4,7 +4,7 @@ Contributors: Bruce McKinnon
 Tags: eventbrite
 Requires at least: 5
 Tested up to: 5.3
-Stable tag: 2020.11
+Stable tag: 2020.12
 
 Display a list of event sessions for a specific organiser
 
@@ -84,3 +84,4 @@ v2020.09 - Support the display of multiple performers.
 		- Better parsing of session labels, ignoring track labels.
 v2020.10  - Added support for CSS3 sticky positioning on h3 headers.
 v2020.11  - Added support for the dayheaderformat parameter
+v2020.12 - Re-release of v2020.11 - no code changes just version change.
