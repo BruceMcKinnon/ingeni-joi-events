@@ -4,7 +4,7 @@ Contributors: Bruce McKinnon
 Tags: eventbrite
 Requires at least: 5
 Tested up to: 5.3
-Stable tag: 2020.12
+Stable tag: 2020.13
 
 Display a list of event sessions for a specific organiser
 
@@ -59,6 +59,10 @@ To hide labels of a particular colour, use the hidelabelcolors parameter with HT
 
 
 
+
+== How do you change the date format? ==
+
+
 To set the day header format, specify a valid PPHP date() format.
 
 For example: [joi-events-list-all dayheaderformat="D j M Y"]
@@ -66,6 +70,21 @@ For example: [joi-events-list-all dayheaderformat="D j M Y"]
 displays the date as Fri 13 March 2020
 
 The default is 'l j M' which displays Friday 13 March. For the full range of PHP date format, see https://www.php.net/manual/en/function.date.php
+
+
+
+
+== How do you hide certain track labels ==
+
+There are two ways to do this. You can either use the hidetracknames option.
+
+For example: [joi-events-list-all hidetracknames="Workshops,Workouts"]
+
+This will hide the headings for all tracks title 'Workshops' or 'Workouts'.
+
+The other way is to use CSS. Each track wrapper is given its own ID, which can be targeted with CSS.
+
+
 
 
 
@@ -85,3 +104,6 @@ v2020.09 - Support the display of multiple performers.
 v2020.10  - Added support for CSS3 sticky positioning on h3 headers.
 v2020.11  - Added support for the dayheaderformat parameter
 v2020.12 - Re-release of v2020.11 - no code changes just version change.
+v2020.13 - Added the hidetracknames parameter - supply a comma delimited list of track names to hide.
+		- Added id selectors to each track wrapper.
+		- Added some extra error checks for empty arrays.
